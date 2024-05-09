@@ -7,14 +7,16 @@
 #SBATCH -o helper_hostname_%A_%a.out # Standard out goes to this file
 #SBATCH -e helper_hostname_%A_%a.err # Standard err goes to this filehostname
 
+#script written by Ari Ginsparg
+
 #motify these variables to customize the usage of the script
 #starting motifs file
-file_name=300000_sample_motifs_file.motifs
+file_name=200000_sample_motifs_file.motifs
 #path to the executable for remove_duplicate_motifs
 path_to_executable=/scratch/abgvg9/rosetta_may_for_checkin/rosetta/source/bin/remove_duplicate_motifs.linuxgccrelease
 #number of motifs per sub-file (ideally 100k-1M)
 #there is a balance between too few motifs per sub to find duplicates and the jobs running too long (too many motifs per sub)
-motifs_per_sub=100000
+motifs_per_sub=10000
 #-----------------------------------------------------------------------------------------------------
 #script (iterates 5 times, as this removes nearly all duplicate motifs without wasting too much time)
 
@@ -26,7 +28,7 @@ me=$(whoami)
 
 #iteration 1
 job_num_init=$(squeue -A $me | wc -l)
-python remove_duplicate_motifs_helper.py $file_name $path_to_executable $motifs_per_sub
+python remove_duplicate_motifs_helper.py $file_name $path_to_executable ${motifs_per_sub}
 
 while [ 1 -eq 1 ]
 do
@@ -37,15 +39,16 @@ do
         fi
 done
 
-rm $file_prefix_secondary_remove.motifs
-cat $file_prefix_$motifs_per_sub_duplicates_removed_*.motifs >> $file_prefix_secondary_remove.motifs
+rm ${file_prefix}_secondary_remove.motifs
+echo "cat ${file_prefix}_${motifs_per_sub}_duplicates_removed_*.motifs >> ${file_prefix}_secondary_remove.motifs"
+cat ${file_prefix}_${motifs_per_sub}_duplicates_removed_*.motifs >> ${file_prefix}_secondary_remove.motifs
 
 #iteration 2
 
-python shuffle_motif_lines.py $file_prefix_secondary_remove.motifs
+python shuffle_motif_lines.py ${file_prefix}_secondary_remove.motifs
 
 job_num_init=$(squeue -A $me | wc -l)
-python remove_duplicate_motifs_helper.py $file_prefix_secondary_remove.motifs $path_to_executable $motifs_per_sub
+python remove_duplicate_motifs_helper.py ${file_prefix}_secondary_remove_randomized.motifs $path_to_executable ${motifs_per_sub}
 
 while [ 1 -eq 1 ]
 do
@@ -56,15 +59,15 @@ do
         fi
 done
 
-rm  $file_prefix_tertiary_remove.motifs
-cat  $file_prefix_secondary_remove_randomized_$motifs_per_sub_duplicates_removed_*.motifs >> $file_prefix_tertiary_remove.motifs
+rm  ${file_prefix}_tertiary_remove.motifs
+cat  ${file_prefix}_secondary_remove_randomized_${motifs_per_sub}_duplicates_removed_*.motifs >> ${file_prefix}_tertiary_remove.motifs
 
 #iteration 3
 
-python shuffle_motif_lines.py $file_prefix_tertiary_remove.motifs
+python shuffle_motif_lines.py ${file_prefix}_tertiary_remove.motifs
 
 job_num_init=$(squeue -A $me | wc -l)
-python remove_duplicate_motifs_helper.py $file_prefix_tertiary_remove_randomized.motifs $path_to_executable $motifs_per_sub
+python remove_duplicate_motifs_helper.py ${file_prefix}_tertiary_remove_randomized.motifs $path_to_executable ${motifs_per_sub}
 
 while [ 1 -eq 1 ]
 do
@@ -75,15 +78,15 @@ do
         fi
 done
 
-rm $file_prefix_quaternary_remove.motifs
-cat $file_prefix_tertiary_remove_randomized_$motifs_per_sub_duplicates_removed_*.motifs >> $file_prefix_quaternary_remove.motifs
+rm ${file_prefix}_quaternary_remove.motifs
+cat ${file_prefix}_tertiary_remove_randomized_${motifs_per_sub}_duplicates_removed_*.motifs >> ${file_prefix}_quaternary_remove.motifs
 
 #iteration 4
 
-python shuffle_motif_lines.py $file_prefix_quaternary_remove.motifs
+python shuffle_motif_lines.py ${file_prefix}_quaternary_remove.motifs
 
 job_num_init=$(squeue -A $me | wc -l)
-python remove_duplicate_motifs_helper.py $file_prefix_quaternary_remove_randomized.motifs $path_to_executable $motifs_per_sub
+python remove_duplicate_motifs_helper.py ${file_prefix}_quaternary_remove_randomized.motifs $path_to_executable ${motifs_per_sub}
 
 while [ 1 -eq 1 ]
 do
@@ -94,6 +97,8 @@ do
         fi
 done
 
-rm $file_prefix_5_remove.motifs
-cat $file_prefix_quaternary_remove_randomized_$motifs_per_sub_duplicates_removed_*.motifs >> $file_prefix_final_duplicates_removed.motifs
+rm ${file_prefix}_5_remove.motifs
+cat ${file_prefix}_quaternary_remove_randomized_${motifs_per_sub}_duplicates_removed_*.motifs >> ${file_prefix}_final_duplicates_removed.motifs
+
+rm *out *err ${file_prefix}*job *_args *remove*motifs ${file_prefix}*${motifs_per_sub}*
 
