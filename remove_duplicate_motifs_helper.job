@@ -16,7 +16,7 @@ file_name=200000_sample_motifs_file.motifs
 path_to_executable=/scratch/abgvg9/rosetta_may_for_checkin/rosetta/source/bin/remove_duplicate_motifs.linuxgccrelease
 #number of motifs per sub-file (ideally 100k-1M)
 #there is a balance between too few motifs per sub to find duplicates and the jobs running too long (too many motifs per sub)
-motifs_per_sub=10000
+motifs_per_sub=100000
 #-----------------------------------------------------------------------------------------------------
 #script (iterates 5 times, as this removes nearly all duplicate motifs without wasting too much time)
 
