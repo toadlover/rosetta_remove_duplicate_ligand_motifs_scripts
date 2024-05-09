@@ -11,12 +11,14 @@
 
 #motify these variables to customize the usage of the script
 #starting motifs file
-file_name=200000_sample_motifs_file.motifs
+#file_name=200000_sample_motifs_file.motifs
+file_name=500_sample_motifs_file.motifs
 #path to the executable for remove_duplicate_motifs
 path_to_executable=/scratch/abgvg9/rosetta_may_for_checkin/rosetta/source/bin/remove_duplicate_motifs.linuxgccrelease
 #number of motifs per sub-file (ideally 100k-1M)
 #there is a balance between too few motifs per sub to find duplicates and the jobs running too long (too many motifs per sub)
-motifs_per_sub=100000
+motifs_per_sub=50
+#motifs_per_sub=100000
 #-----------------------------------------------------------------------------------------------------
 #script (iterates 5 times, as this removes nearly all duplicate motifs without wasting too much time)
 
@@ -100,5 +102,5 @@ done
 rm ${file_prefix}_5_remove.motifs
 cat ${file_prefix}_quaternary_remove_randomized_${motifs_per_sub}_duplicates_removed_*.motifs >> ${file_prefix}_final_duplicates_removed.motifs
 
-rm *out *err ${file_prefix}*job *_args *remove*motifs ${file_prefix}*${motifs_per_sub}*
+rm *out *err ${file_prefix}*job *_args ${file_prefix}*${motifs_per_sub}* *remove.motifs *randomized*
 
