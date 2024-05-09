@@ -1,0 +1,99 @@
+#!/bin/bash
+#SBATCH -p long # Partition to submit to
+#SBATCH -n 1 # Number of cores requested
+#SBATCH -N 1 # Ensure that all cores are on one machine
+#SBATCH -t 3000 # Runtime in minutes
+#SBATCH --mem=120000 # Memory per cpu in MB (see also --mem-per-cpu)
+#SBATCH -o helper_hostname_%A_%a.out # Standard out goes to this file
+#SBATCH -e helper_hostname_%A_%a.err # Standard err goes to this filehostname
+
+#motify these variables to customize the usage of the script
+#starting motifs file
+file_name=300000_sample_motifs_file.motifs
+#path to the executable for remove_duplicate_motifs
+path_to_executable=/scratch/abgvg9/rosetta_may_for_checkin/rosetta/source/bin/remove_duplicate_motifs.linuxgccrelease
+#number of motifs per sub-file (ideally 100k-1M)
+#there is a balance between too few motifs per sub to find duplicates and the jobs running too long (too many motifs per sub)
+motifs_per_sub=100000
+#-----------------------------------------------------------------------------------------------------
+#script (iterates 5 times, as this removes nearly all duplicate motifs without wasting too much time)
+
+#extract file name prefix (before period)
+file_prefix=$(echo $file_name | sed 's/\./ /g' | awk '{print $1}')
+
+#define who is using the script to look for their running jobs in the slurm queue
+me=$(whoami)
+
+#iteration 1
+job_num_init=$(squeue -A $me | wc -l)
+python remove_duplicate_motifs_helper.py $file_name $path_to_executable $motifs_per_sub
+
+while [ 1 -eq 1 ]
+do
+        job_num_curr=$(squeue -A $me | wc -l)
+        if [ $job_num_init -eq $job_num_curr ]
+        then
+                break
+        fi
+done
+
+rm $file_prefix_secondary_remove.motifs
+cat $file_prefix_$motifs_per_sub_duplicates_removed_*.motifs >> $file_prefix_secondary_remove.motifs
+
+#iteration 2
+
+python shuffle_motif_lines.py $file_prefix_secondary_remove.motifs
+
+job_num_init=$(squeue -A $me | wc -l)
+python remove_duplicate_motifs_helper.py $file_prefix_secondary_remove.motifs $path_to_executable $motifs_per_sub
+
+while [ 1 -eq 1 ]
+do
+        job_num_curr=$(squeue -A $me | wc -l)
+        if [ $job_num_init -eq $job_num_curr ]
+        then
+                break
+        fi
+done
+
+rm  $file_prefix_tertiary_remove.motifs
+cat  $file_prefix_secondary_remove_randomized_$motifs_per_sub_duplicates_removed_*.motifs >> $file_prefix_tertiary_remove.motifs
+
+#iteration 3
+
+python shuffle_motif_lines.py $file_prefix_tertiary_remove.motifs
+
+job_num_init=$(squeue -A $me | wc -l)
+python remove_duplicate_motifs_helper.py $file_prefix_tertiary_remove_randomized.motifs $path_to_executable $motifs_per_sub
+
+while [ 1 -eq 1 ]
+do
+        job_num_curr=$(squeue -A $me | wc -l)
+        if [ $job_num_init -eq $job_num_curr ]
+        then
+                break
+        fi
+done
+
+rm $file_prefix_quaternary_remove.motifs
+cat $file_prefix_tertiary_remove_randomized_$motifs_per_sub_duplicates_removed_*.motifs >> $file_prefix_quaternary_remove.motifs
+
+#iteration 4
+
+python shuffle_motif_lines.py $file_prefix_quaternary_remove.motifs
+
+job_num_init=$(squeue -A $me | wc -l)
+python remove_duplicate_motifs_helper.py $file_prefix_quaternary_remove_randomized.motifs $path_to_executable $motifs_per_sub
+
+while [ 1 -eq 1 ]
+do
+        job_num_curr=$(squeue -A $me | wc -l)
+        if [ $job_num_init -eq $job_num_curr ]
+        then
+                break
+        fi
+done
+
+rm $file_prefix_5_remove.motifs
+cat $file_prefix_quaternary_remove_randomized_$motifs_per_sub_duplicates_removed_*.motifs >> $file_prefix_final_duplicates_removed.motifs
+
