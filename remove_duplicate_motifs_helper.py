@@ -1,3 +1,7 @@
+#Ari Ginsparg
+#5/9/2024
+#This script is used by remove_duplicate_motifs_helper.job to automate the calling and running of Rosetta's remove_duplicate_motifs executable on a given motifs file
+
 import os, sys
 
 file = sys.argv[1]
@@ -7,6 +11,9 @@ rdm_executable = sys.argv[2]
 
 #maximum number of motifs to include in a smaller file (ideally 100,000-1,000,000)
 chunk_size = int(sys.argv[3])
+
+#double chunk size since motifs are 2 lines long, that way we have the right number of motifs in each file
+motif_chunk_size = chunk_size * 2
 
 #get number of motifs in the file (line count / 2)
 os.system("wc -l " + file + " >> temp_line_number_holder.txt")
@@ -37,8 +44,8 @@ for line in motif_file.readlines():
 	current_out_file.write(line)
 
 	#output the motif to a corresponding file, get the modulus of the line counter and make new file when mod of line counter and 2 million is 0
-	if line_counter % chunk_size == 0:
-		file_number = int(line_counter / chunk_size)
+	if line_counter % motif_chunk_size == 0:
+		file_number = int(line_counter / motif_chunk_size)
 		current_out_file.close()
 		current_out_file = open(file_prefix + "_" + str(chunk_size) + "_" + str(file_number) + ".motifs", "w")
 
@@ -67,6 +74,12 @@ for line in motif_file.readlines():
 	line_counter = line_counter + 1
 
 current_out_file.close()
+
+#print(line_counter)
+
+#if there are no motifs left (clean break off of previous file), don't make a new file that won'd remove duplicates off of anything
+if line_counter % motif_chunk_size == 1:
+    quit()
 
 #fire off a job to remove duplicate motifs from the closed motif file (and make a slurm job/arg file) for final  motif file
 job_file = open(file_prefix + "_" + str(file_number) +  ".job", "w")
