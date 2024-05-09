@@ -100,5 +100,5 @@ done
 rm ${file_prefix}_5_remove.motifs
 cat ${file_prefix}_quaternary_remove_randomized_${motifs_per_sub}_duplicates_removed_*.motifs >> ${file_prefix}_final_duplicates_removed.motifs
 
-#rm *out *err ${file_prefix}*job *_args *remove*motifs ${file_prefix}*${motifs_per_sub}*
+rm *out *err ${file_prefix}*job *_args *remove*motifs ${file_prefix}*${motifs_per_sub}*
 
