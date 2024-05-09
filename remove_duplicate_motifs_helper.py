@@ -78,7 +78,7 @@ current_out_file.close()
 #print(line_counter)
 
 #if there are no motifs left (clean break off of previous file), don't make a new file that won'd remove duplicates off of anything
-if line_counter % motif_chunk_size == 1:
+if line_counter % motif_chunk_size == 1 or line_counter % motif_chunk_size == 0:
     quit()
 
 #fire off a job to remove duplicate motifs from the closed motif file (and make a slurm job/arg file) for final  motif file
