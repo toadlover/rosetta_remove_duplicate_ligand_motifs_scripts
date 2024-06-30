@@ -1,6 +1,14 @@
--parser:protocol /scratch/abgvg9/motif_library_work/training/pdbs/lite_enzdes.xml
+#option to allow overwriting files when one currently exists
 -out::overwrite true
+
+#name of initial input motifs file that may contain duplicates
 -motif_filename 5000_motifs.motifs
+
+#Name of output motifs file with duplicates removed
 -output_file 5000_motifs_duplicates_removed.motifs
+
+#distance threshold for RMSD of atoms in angstroms
 -duplicate_dist_cutoff 0.8
+
+#angle threshold for atoms in radians
 -duplicate_angle_cutoff 0.3
